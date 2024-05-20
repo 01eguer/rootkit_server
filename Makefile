@@ -6,6 +6,7 @@ CFLAGS   := -O2 -Wall -pthread -lcrypto
 # CFLAGS   := -Wall -pthread -lcrypto 
 
 MKDIR    := mkdir -p
+INSTALL  := install
 
 # REPLICATE FOLDER STRUCTURE
 SRC_SUBDIRS	:= $(shell find $(SRC_DIR) -type d )
@@ -44,31 +45,36 @@ clean:
 	rm -rf $(TARGET) $(OBJ_SUBDIRS)
 
 install: $(TARGET)
-	ifdef SYSTEMD
-		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
-		cp daemon/systemd/rootkit-server.service /etc/systemd/system/
-		systemctl daemon-reload
-		systemctl enable rootkit-server
-		ifdef OPENRC
-		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
-		cp daemon/openrc/rootkit-server /etc/init.d/
-	rc-update add rootkit-server default
-		else ifdef INITRC
-		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET)
-		cp daemon/initrc/rootkit-server /etc/init.d/
-		update-rc.d rootkit-server defaults
-	endif
+	@if [ "$(SYSTEMD)" = "1" ]; then \
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET); \
+		cp src/daemon/systemd/rootkit-server.service /etc/systemd/system/; \
+		systemctl daemon-reload; \
+		#systemctl enable rootkit-server; \
+	fi
+	@if [ "$(OPENRC)" = "1" ]; then \
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET); \
+		cp src/daemon/openrc/rootkit-server /etc/init.d/; \
+		#rc-update add rootkit-server default; \
+	fi
+	@if [ "$(INITRC)" = "1" ]; then \
+		$(INSTALL) -D $(TARGET) /usr/sbin/$(TARGET); \
+		cp src/daemon/initrc/rootkit-server /etc/init.d/; \
+		#update-rc.d rootkit-server defaults; \
+	fi
 
 uninstall:
+	@if [ "$(SYSTEMD)" = "1" ]; then \
+		systemctl disable rootkit-server; \
+		rm -f /etc/systemd/system/rootkit-server.service; \
+		systemctl daemon-reload; \
+	fi
+	@if [ "$(OPENRC)" = "1" ]; then \
+		rc-update del rootkit-server default; \
+		rm -f /etc/init.d/rootkit-server; \
+	fi
+	@if [ "$(INITRC)" = "1" ]; then \
+		update-rc.d -f rootkit-server remove; \
+		rm -f /etc/init.d/rootkit-server; \
+	fi
 	rm -f /usr/sbin/$(TARGET)
-	ifdef SYSTEMD
-		systemctl disable rootkit-server
-		rm -f /etc/systemd/system/rootkit-server.service
-		systemctl daemon-reload
-	else ifdef OPENRC
-		rc-update del rootkit-server default
-		rm -f /etc/init.d/rootkit-server
-	else ifdef INITRC
-		update-rc.d -f rootkit-server remove
-		rm -f /etc/init.d/rootkit-server
-	endif
+
