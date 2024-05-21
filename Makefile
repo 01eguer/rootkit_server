@@ -24,7 +24,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(OBJ_SUBDIRS) 
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 # $^ <- todas las dependencias de la regla
 # $@ <- objetivo de la regla
