@@ -21,7 +21,7 @@ OBJS       := $(patsubst $(SRC_DIR)%,$(OBJ_DIR)%,$(patsubst %.c,%.o,$(SRCS)))
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(CFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(OBJ_SUBDIRS) 
 	$(CC) -c -o $@ $< $(CFLAGS)
